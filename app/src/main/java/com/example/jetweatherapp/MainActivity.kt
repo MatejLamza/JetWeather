@@ -3,26 +3,24 @@ package com.example.jetweatherapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.example.jetweatherapp.navigation.AppNavigation
+import com.example.jetweatherapp.ui.home.HomeViewModel
 import com.example.jetweatherapp.ui.theme.JetWeatherAppTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val controller = rememberNavController()
             JetWeatherAppTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
-                ) {
-                    Greeting("Android")
+                val homeVM: HomeViewModel by viewModels()
+                MyApp {
+                    AppNavigation(navController = controller, homeViewModel = homeVM)
                 }
             }
         }
@@ -30,14 +28,8 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    JetWeatherAppTheme {
-        Greeting("Android")
+fun MyApp(content: @Composable () -> Unit) {
+    JetWeatherAppTheme() {
+        content()
     }
 }
