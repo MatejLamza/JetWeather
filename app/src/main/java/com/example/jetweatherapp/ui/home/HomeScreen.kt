@@ -101,6 +101,7 @@ fun HomeScreen(
 
 @Composable
 private fun handleErrors(
+
     uiState: HomeUiState,
     onRefreshScreen: () -> Unit,
     onErrorDismissed: (Long) -> Unit,
