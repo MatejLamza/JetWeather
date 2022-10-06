@@ -3,5 +3,6 @@
 
     <string name="load_error">Couldn\'t find location you are looking for.</string>
     <string name="home_tap_to_load_content">Refresh</string>
+    <string name="retry">Retry</string>
 
 </resources>

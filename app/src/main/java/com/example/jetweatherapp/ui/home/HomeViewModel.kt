@@ -68,9 +68,6 @@ class HomeViewModel @Inject constructor(private val repository: WeatherRepositor
             viewModelState.value.toUIState()
         )
 
-    private val _weather = MutableStateFlow<Location?>(null)
-    val weather = _weather.asStateFlow()
-
     init {
         viewModelScope.launch {
             val result = repository.getWeather("Zagreb")
@@ -99,9 +96,7 @@ class HomeViewModel @Inject constructor(private val repository: WeatherRepositor
             val result = repository.getWeather(cityName)
             viewModelState.update {
                 when (result) {
-                    is State.Done -> {
-                        it.copy(weather = result.data, isLoading = false)
-                    }
+                    is State.Done -> it.copy(weather = result.data, isLoading = false)
                     is State.Error -> {
                         val errorMessages = it.errorMessages + ErrorMessage(
                             id = UUID.randomUUID().mostSignificantBits,
@@ -123,6 +118,23 @@ class HomeViewModel @Inject constructor(private val repository: WeatherRepositor
     }
 
     fun refresh() {
-
+        viewModelScope.launch {
+            val result = repository.getWeather("Zagreb")
+            viewModelState.update {
+                when (result) {
+                    is State.Done -> {
+                        it.copy(weather = result.data, isLoading = false)
+                    }
+                    is State.Error -> {
+                        val errorMessages = it.errorMessages + ErrorMessage(
+                            id = UUID.randomUUID().mostSignificantBits,
+                            messageId = R.string.load_error
+                        )
+                        it.copy(errorMessages = errorMessages, isLoading = false)
+                    }
+                    else -> throw IllegalStateException("")
+                }
+            }
+        }
     }
 }
