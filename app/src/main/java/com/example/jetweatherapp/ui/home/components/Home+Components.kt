@@ -29,7 +29,6 @@ import com.example.jetweatherapp.data.model.Location
 import com.example.jetweatherapp.ui.theme.TypographyLight
 
 
-@Preview
 @Composable
 fun BottomInfoCard(modifier: Modifier = Modifier) {
     Row(
@@ -41,6 +40,7 @@ fun BottomInfoCard(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // todo: replace with api data
         InfoDetailsRow(information = "64 %", label = "Humidity")
         InfoDetailsRow(information = "4 km", label = "Visibility")
         InfoDetailsRow(information = "Low 0", label = "UV Index")
@@ -137,4 +137,14 @@ fun SearchBar(
             )
         }
     }
+}
+
+@Composable
+internal fun Search(onSearch: (String) -> Unit) {
+    SearchBar(
+        hint = "Search city ...",
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) { onSearch(it) }
 }

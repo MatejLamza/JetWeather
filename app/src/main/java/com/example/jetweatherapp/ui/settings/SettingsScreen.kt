@@ -27,6 +27,7 @@ fun SettingsScreen(navController: NavController, configuration: String) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Text(text = "This is Settings Screen with a payload $configuration")
         }
     }

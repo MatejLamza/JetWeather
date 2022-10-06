@@ -14,7 +14,7 @@ import com.example.jetweatherapp.R
 import com.example.jetweatherapp.common.components.JetWeatherSnackbarHost
 import com.example.jetweatherapp.common.components.LoadingContent
 import com.example.jetweatherapp.ui.home.components.BottomInfoCard
-import com.example.jetweatherapp.ui.home.components.SearchBar
+import com.example.jetweatherapp.ui.home.components.Search
 import com.example.jetweatherapp.ui.home.components.TemperatureInformationHeader
 
 @Composable
@@ -62,11 +62,8 @@ fun HomeScreen(
                         when (uiState) {
                             is HomeUiState.CityNotFound -> {
                                 if (uiState.errorMessages.isEmpty()) {
-                                    // if there are no posts, and no error, let the user refresh manually
-                                    TextButton(
-                                        onClick = onRefreshScreen,
-                                        modifier.fillMaxSize()
-                                    ) {
+                                    // if there is no location found, and no error, let the user refresh manually
+                                    TextButton(onClick = onRefreshScreen, modifier.fillMaxSize()) {
                                         Text(
                                             stringResource(id = R.string.home_tap_to_load_content),
                                             textAlign = TextAlign.Center
@@ -93,6 +90,22 @@ fun HomeScreen(
         }
     }
 
+    handleErrors(
+        uiState = uiState,
+        onRefreshScreen = onRefreshScreen,
+        onErrorDismissed = onErrorDismissed,
+        snackbarHostState = snackbarHostState
+    )
+}
+
+
+@Composable
+private fun handleErrors(
+    uiState: HomeUiState,
+    onRefreshScreen: () -> Unit,
+    onErrorDismissed: (Long) -> Unit,
+    snackbarHostState: SnackbarHostState
+) {
     if (uiState.errorMessages.isNotEmpty()) {
         val errorMessage = remember(uiState) { uiState.errorMessages[0] }
         val errorMessageText = stringResource(id = errorMessage.messageId)
@@ -117,13 +130,5 @@ fun HomeScreen(
     }
 }
 
-@Composable
-private fun Search(onSearch: (String) -> Unit) {
-    SearchBar(
-        hint = "Search city ...",
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) { onSearch(it) }
-}
+
 
