@@ -8,10 +8,14 @@ import com.example.jetweatherapp.data.model.Location
 import com.example.jetweatherapp.data.repo.WeatherRepository
 import com.example.jetweatherapp.utils.ErrorMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 sealed interface HomeUiState {
     val isLoading: Boolean
@@ -49,11 +53,10 @@ private data class HomeViewModelState(
     fun toUIState(): HomeUiState =
         if (weather == null)
             HomeUiState.CityNotFound(isLoading = isLoading, errorMessages = errorMessages)
-        else HomeUiState.CityFound(
-            weather = weather,
-            isLoading = isLoading,
-            errorMessages = errorMessages
-        )
+        else
+            HomeUiState.CityFound(
+                weather = weather, isLoading = isLoading, errorMessages = errorMessages
+            )
 }
 
 @HiltViewModel
@@ -69,44 +72,16 @@ class HomeViewModel @Inject constructor(private val repository: WeatherRepositor
         )
 
     init {
-        viewModelScope.launch {
-            val result = repository.getWeather("Zagreb")
-            viewModelState.update {
-                when (result) {
-                    is State.Done -> {
-                        it.copy(weather = result.data, isLoading = false)
-                    }
-                    is State.Error -> {
-                        val errorMessages = it.errorMessages + ErrorMessage(
-                            id = UUID.randomUUID().mostSignificantBits,
-                            messageId = R.string.load_error
-                        )
-                        it.copy(errorMessages = errorMessages, isLoading = false)
-                    }
-                    else -> throw IllegalStateException("")
-                }
-            }
+        launchWithState(viewModelState) {
+            repository.getWeather("Zagreb")
         }
     }
 
     fun fetchTemperature(cityName: String) {
         viewModelState.update { it.copy(isLoading = true) }
 
-        viewModelScope.launch {
-            val result = repository.getWeather(cityName)
-            viewModelState.update {
-                when (result) {
-                    is State.Done -> it.copy(weather = result.data, isLoading = false)
-                    is State.Error -> {
-                        val errorMessages = it.errorMessages + ErrorMessage(
-                            id = UUID.randomUUID().mostSignificantBits,
-                            messageId = R.string.load_error
-                        )
-                        it.copy(weather = null, errorMessages = errorMessages, isLoading = false)
-                    }
-                    else -> throw IllegalStateException("")
-                }
-            }
+        launchWithState(viewModelState) {
+            repository.getWeather(cityName)
         }
     }
 
@@ -118,22 +93,33 @@ class HomeViewModel @Inject constructor(private val repository: WeatherRepositor
     }
 
     fun refresh() {
-        viewModelScope.launch {
-            val result = repository.getWeather("Zagreb")
-            viewModelState.update {
-                when (result) {
-                    is State.Done -> {
-                        it.copy(weather = result.data, isLoading = false)
-                    }
-                    is State.Error -> {
-                        val errorMessages = it.errorMessages + ErrorMessage(
-                            id = UUID.randomUUID().mostSignificantBits,
-                            messageId = R.string.load_error
-                        )
-                        it.copy(errorMessages = errorMessages, isLoading = false)
-                    }
-                    else -> throw IllegalStateException("")
+        launchWithState(viewModelState) {
+            repository.getWeather("Zagreb")
+        }
+    }
+}
+
+private fun ViewModel.launchWithState(
+    state: MutableStateFlow<HomeViewModelState>,
+    context: CoroutineContext = EmptyCoroutineContext,
+    start: CoroutineStart = CoroutineStart.DEFAULT,
+    block: suspend CoroutineScope.() -> State<Location>
+) {
+    viewModelScope.launch(context, start) {
+        val result = block(this)
+        state.update {
+            when (result) {
+                is State.Done -> {
+                    it.copy(weather = result.data, isLoading = false)
                 }
+                is State.Error -> {
+                    val errorMessages = it.errorMessages + ErrorMessage(
+                        id = UUID.randomUUID().mostSignificantBits,
+                        messageId = R.string.load_error
+                    )
+                    it.copy(weather = null, errorMessages = errorMessages, isLoading = false)
+                }
+                else -> throw IllegalStateException("")
             }
         }
     }
